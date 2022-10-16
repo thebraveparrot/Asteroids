@@ -45,7 +45,7 @@ embedded_instances {
   data: "embedded_components {\n"
   "  id: \"sprite\"\n"
   "  type: \"sprite\"\n"
-  "  data: \"tile_set: \\\"/main/effects.atlas\\\"\\n"
+  "  data: \"tile_set: \\\"/main/background.atlas\\\"\\n"
   "default_animation: \\\"background\\\"\\n"
   "material: \\\"/main/repeat.material\\\"\\n"
   "blend_mode: BLEND_MODE_ALPHA\\n"
