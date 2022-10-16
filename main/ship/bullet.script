@@ -1,0 +1,25 @@
+go.property("speed", 1000)
+
+function init(self)
+	local sprite_size = go.get("#sprite", "size")
+	local diagonal_size = math.sqrt(math.pow(sprite_size.x, 2) + math.pow(sprite_size.y, 2))
+	self.boundary_size = math.ceil(diagonal_size)
+end
+
+function update(self, dt)
+	local pos = go.get_position()
+	local distance = self.speed * dt
+	local direction = vmath.rotate(go.get_rotation(), vmath.vector3(0, distance, 0))
+	pos = pos + direction
+	go.set_position(pos)
+
+	-- Delete if bullet is out of bounds
+	local w_width, w_height = window.get_size()
+	if pos.x < -self.boundary_size 
+	or pos.y <- self.boundary_size
+	or pos.x > (w_width + self.boundary_size)
+	or pos.y > (w_height + self.boundary_size) then
+		go.delete()
+		print("bullet deleted")
+	end
+end

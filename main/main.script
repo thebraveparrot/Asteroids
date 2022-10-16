@@ -1,0 +1,4 @@
+function init(self)
+	local scale = go.get_scale()
+	sprite.set_constant("/background#sprite", "scale", vmath.vector4(scale.x, scale.y, 1, 1))
+end

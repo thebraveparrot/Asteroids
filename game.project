@@ -1,0 +1,21 @@
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 1024
+height = 768
+
+[android]
+input_method = HiddenInputField
+
+[project]
+title = Asteroids
+dependencies = 
+
+[html5]
+cssfile = /builtins/manifests/web/dark_theme.css
+show_made_with_defold = 0
+

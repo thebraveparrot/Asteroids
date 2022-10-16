@@ -1,0 +1,108 @@
+go.property("acceleration", 300)
+go.property("max_speed", 700)
+go.property("turn_speed", 8)
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	-- Whether we should accelerate the ship
+	self.accelerate = 0
+
+	-- Modifer(1 - left, 0 - none, or -1- right)  of which direction to turn the ship
+	self.turn = 0
+
+	-- When the ship exceeds this boundary, it is "wrapped" to the other side of the screen
+	-- This is done by getting the diagonal length of the sprite using the pythagorean theorem
+	local sprite_size = go.get("#sprite", "size")
+	local diagonal_size = math.sqrt(math.pow(sprite_size.x, 2) + math.pow(sprite_size.y, 2))
+	self.boundary_size = math.ceil(diagonal_size)
+
+	self.can_shoot = true
+end
+
+local function wrap_if_out_of_bounds(self, pos, rotation)
+	local w_width, w_height = window.get_size()
+	if pos.x < -self.boundary_size then
+		pos.x = w_width + (self.boundary_size + pos.x)
+		go.set_position(pos)
+	elseif pos.x > (w_width + self.boundary_size) then
+		local oob_x = pos.x - (w_width + self.boundary_size)
+		pos.x = oob_x - self.boundary_size
+		go.set_position(pos)
+	end
+
+	if pos.y < -self.boundary_size then
+		pos.y = w_height + (self.boundary_size + pos.y)
+		go.set_position(pos)
+	elseif pos.y > (w_height + self.boundary_size) then
+		local oob_y = pos.y - (w_height + self.boundary_size)
+		pos.y = oob_y - self.boundary_size
+		go.set_position(pos)
+	end
+end
+
+function update(self, dt)
+	local rotation = go.get_rotation()
+	
+	-- update rotation
+	if self.turn ~= 0 then
+		rotation = rotation * vmath.quat_rotation_z(self.turn_speed * self.turn * dt)
+		go.set_rotation(rotation)
+	end
+
+	local pos = go.get_position()
+	if self.accelerate then
+		local distance = self.max_speed * self.accelerate * dt
+		local direction = vmath.rotate(rotation, vmath.vector3(0, distance, 0))
+		pos = pos + direction
+		go.set_position(pos)
+	end
+
+	wrap_if_out_of_bounds(self, pos, rotation)
+end
+
+function on_message(self, message_id, message, sender)
+end
+
+local function allow_shooting(self)
+	return function()
+		self.can_shoot = true
+	end
+end
+
+local function fire_bullet(self)
+	factory.create("#bullet_factory", go.get_position(), go.get_rotation())
+	
+	-- don't let use shoot for a while
+	self.can_shoot = false
+	timer.delay(0.25, false, allow_shooting(self))
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("left") then
+		self.turn = ((self.accelerate ~= 0 or action.released) and 0) or 1
+	elseif action_id == hash("right") then
+		self.turn = ((self.accelerate ~= 0 or action.released) and 0) or -1
+	elseif action_id == hash("up") then
+		self.accelerate = ((self.turn ~= 0 or action.released) and 0) or 1
+	elseif action_id == hash("shoot") and self.can_shoot and action.pressed then
+		fire_bullet(self)
+	end
+end
+
+local function explode(self)
+end
+
+local function resolve_collision(self, message, sender)
+	print("Ship collided with ", message.other_id)
+
+	if message.other_group == hash("enemy") then
+		explode(self)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("collision_response") then
+		resolve_collision(self, message, sender)
+	end
+end

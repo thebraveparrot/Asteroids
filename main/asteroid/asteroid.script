@@ -1,0 +1,52 @@
+go.property("turn_speed", 2)
+go.property("speed", 100)
+
+function init(self)
+	-- When the ship exceeds this boundary, it is "wrapped" to the other side of the screen
+	-- This is done by getting the diagonal length of the sprite using the pythagorean theorem
+	local sprite_size = go.get("#sprite", "size")
+	local diagonal_size = math.sqrt(math.pow(sprite_size.x, 2) + math.pow(sprite_size.y, 2))
+	self.boundary_size = math.ceil(diagonal_size)
+end
+
+local function wrap_if_out_of_bounds(self, pos, rotation)
+	local w_width, w_height = window.get_size()
+	if pos.x < -self.boundary_size then
+		pos.x = w_width + (self.boundary_size + pos.x)
+		go.set_position(pos)
+	elseif pos.x > (w_width + self.boundary_size) then
+		local oob_x = pos.x - (w_width + self.boundary_size)
+		pos.x = oob_x - self.boundary_size
+		go.set_position(pos)
+	end
+
+	if pos.y < -self.boundary_size then
+		pos.y = w_height + (self.boundary_size + pos.y)
+		go.set_position(pos)
+	elseif pos.y > (w_height + self.boundary_size) then
+		local oob_y = pos.y - (w_height + self.boundary_size)
+		pos.y = oob_y - self.boundary_size
+		go.set_position(pos)
+	end
+end
+
+function update(self, dt)
+	local rotation = go.get_rotation()
+	rotation = rotation * vmath.quat_rotation_z(self.turn_speed * dt)
+	go.set_rotation(rotation)
+
+	local pos = go.get_position()
+	pos = pos + vmath.rotate(rotation, vmath.vector3(0, self.speed * dt, 0))
+
+	wrap_if_out_of_bounds(self, pos, rotation)
+end
+
+local function resolve_collision(self, message, sender)
+
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("collision_response") then
+		resolve_collision(self, message, sender)
+	end
+end
