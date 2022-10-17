@@ -1,5 +1,7 @@
 local utils = require "main.utils"
 
+--- Angle this asteroid moves along
+go.property("angle", 1)
 go.property("turn_speed", 2)
 go.property("speed", 100)
 
@@ -37,7 +39,8 @@ function update(self, dt)
 	go.set_rotation(rotation)
 
 	local pos = go.get_position()
-	pos = pos + vmath.rotate(rotation, vmath.vector3(0, self.speed * dt, 0))
+	pos = pos + vmath.rotate(vmath.quat_rotation_z(self.angle), vmath.vector3(0, self.speed * dt, 0))
+	go.set_position(pos)
 
 	wrap_if_out_of_bounds(self, pos, rotation)
 end
