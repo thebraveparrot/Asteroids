@@ -10,6 +10,9 @@ go.property("max_turn_speed", 3)
 go.property("min_spawn_interval", 7)
 go.property("max_spawn_interval", 12)
 
+--- When calculating where to shoot a newly spawned asteroid, we will aim it randomly at a point less than this distance from the center.
+go.property("aim_distance_from_center", 200)
+
 local start_random_timer
 
 --- For creating spawn points outside of the window.
@@ -50,9 +53,9 @@ local function other_asteroid_within_radius_from(self, radius, from_x, from_y)
 end
 
 local function get_random_location(self)
-	local rand_x, rand_y
 	local window_width, window_height = window.get_size()
 
+	local rand_x, rand_y
 	repeat
 		rand_x, rand_y = random_point_on_rectangle(window_width + (boundary_size * 2), window_height + (boundary_size * 2))
 	until not other_asteroid_within_radius_from(self, required_space_between_asteroids, rand_x, rand_y)
@@ -60,10 +63,35 @@ local function get_random_location(self)
 	return vmath.vector3(rand_x - boundary_size, rand_y - boundary_size, 0)
 end
 
+--- Gets a random angle that an asteroid can travel along
+local function get_random_angle_for_position(self, pos)
+	local window_width, window_height = window.get_size()
+	local center_x = window_width / 2
+	local center_y = window_height / 2
+	local x = math.random(center_x - self.aim_distance_from_center, center_x + self.aim_distance_from_center)
+	local center = vmath.vector3(center_x, center_y, 0)
+	local target_point = vmath.vector3(x, window_height / 2, 0)
+	
+	-- Formula taken from: https://math.stackexchange.com/questions/361412/finding-the-angle-between-three-points
+	local vec_a, vec_b = target_point - pos, center - target_point
+	return math.acos(vmath.dot(vec_a, vec_b) / (vmath.length(vec_a) * vmath.length(vec_b)))
+end
+
+local function delete_old_ones(self)
+	for i, v in ipairs(self.entities) do
+		go.delete(v)
+		table.remove(self.entities, i)
+	end
+end
+
 local function spawn_new_asteroid(self)
+	delete_old_ones(self)
 	local pos = get_random_location(self)
-	local new_asteroid = factory.create("factory#factory", pos, vmath.quat_rotation_z(math.random() * (2 * math.pi)), {
-		turn_speed = math.random(1, 3),
+	local angle = get_random_angle_for_position(self, pos)
+	print("Creating asteroid at position ", pos, " with angle ", angle)
+	local new_asteroid = factory.create("factory#factory", pos, vmath.quat_rotation_z(0), {
+		angle = angle,
+		turn_speed = math.random(self.min_turn_speed, self.max_turn_speed),
 		speed = math.random(self.min_speed, self.max_speed)
 	})
 
