@@ -1,9 +1,8 @@
 local utils = require "main.utils"
 
 --- Angle this asteroid moves along
-go.property("angle", 1)
-go.property("turn_speed", 2)
-go.property("speed", 100)
+go.property("turn_speed", 6)
+go.property("velocity", vmath.vector3())
 
 function init(self)
 	-- When the ship exceeds this boundary, it is "wrapped" to the other side of the screen
@@ -39,8 +38,7 @@ function update(self, dt)
 	go.set_rotation(rotation)
 
 	local pos = go.get_position()
-	pos = pos + vmath.rotate(vmath.quat_rotation_z(self.angle), vmath.vector3(0, self.speed * dt, 0))
-	go.set_position(pos)
+	go.set_position(pos+ (self.velocity * dt))
 
 	wrap_if_out_of_bounds(self, pos, rotation)
 end
