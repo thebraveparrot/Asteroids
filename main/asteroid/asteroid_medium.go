@@ -36,7 +36,7 @@ embedded_components {
 embedded_components {
   id: "collisionobject"
   type: "collisionobject"
-  data: "collision_shape: \"/main/asteroid/asteroid.convexshape\"\n"
+  data: "collision_shape: \"/main/asteroid/asteroid_medium.convexshape\"\n"
   "type: COLLISION_OBJECT_TYPE_KINEMATIC\n"
   "mass: 0.0\n"
   "friction: 0.1\n"

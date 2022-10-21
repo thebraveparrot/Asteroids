@@ -42,7 +42,7 @@ embedded_instances {
   data: "embedded_components {\n"
   "  id: \"factory\"\n"
   "  type: \"factory\"\n"
-  "  data: \"prototype: \\\"/main/asteroid/asteroid.go\\\"\\n"
+  "  data: \"prototype: \\\"/main/asteroid/asteroid_large.go\\\"\\n"
   "load_dynamically: false\\n"
   "\"\n"
   "  position {\n"
