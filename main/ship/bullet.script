@@ -23,3 +23,16 @@ function update(self, dt)
 		print("bullet deleted")
 	end
 end
+
+local function collision_response(self, other_group)
+	if other_group == hash("enemy") then
+		-- TODO: Do more than just delete the bullet. Probably show an explosion or something.
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("collision_response") then
+		collision_response(self, message.other_group)
+	end
+end

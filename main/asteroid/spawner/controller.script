@@ -1,3 +1,5 @@
+local GameState = require("main.gamestate")
+
 --- The min/max speeds that an asteroid can have when spawned.
 go.property("min_speed", 100)
 go.property("max_speed", 200)
@@ -43,7 +45,7 @@ local function other_asteroid_within_radius_from(self, radius, from_x, from_y)
 	local from_x_right = from_x + radius
 	local from_y_up = from_y + radius
 	local from_y_down = from_y - radius
-	for _, asteroid in ipairs(self.entities) do
+	for asteroid, _ in ipairs(GameState.active_asteroids) do
 		local pos = go.get_position(asteroid)
 		if pos.x >= from_x_left and pos.x <= from_x_right
 		and pos.y <= from_y_up and pos.y >= from_y_down then
@@ -63,33 +65,25 @@ local function get_random_location(self)
 	return vmath.vector3(rand_x - boundary_size, rand_y - boundary_size, 0)
 end
 
---- Gets a random angle that an asteroid can travel along
-local function get_random_angle_for_position(self, pos)
+local function get_random_velocity(self, pos)
 	local offset = vmath.vector3()
 	offset.x = math.random(-self.aim_distance_from_center, self.aim_distance_from_center)
 	offset.y = math.random(-self.aim_distance_from_center, self.aim_distance_from_center)
 	local target = go.get_position("/ship") + offset
 	
 	local dir = vmath.normalize(target - pos)
-	local d = #self.entities * 2
+	local d = #GameState.active_asteroids * 2
 	return dir * math.random(10 + d, 100 + d)
 end
 
-local function delete_old_ones(self)
-	for i, v in ipairs(self.entities) do
-		go.delete(v)
-		table.remove(self.entities, i)
-	end
-end
-
 local function spawn_new_asteroid(self)
-	delete_old_ones(self)
+	-- delete_old_ones(self)
 	local pos = get_random_location(self)
-	local vel = get_random_angle_for_position(self, pos)
+	local vel = get_random_velocity(self, pos)
 	print("Creating asteroid at position ", pos, " with angle ", angle)
 	local new_asteroid = factory.create("factory#factory", pos, vmath.quat_rotation_z(0), { velocity = vel })
 
-	table.insert(self.entities, new_asteroid)
+	GameState.active_asteroids[new_asteroid] = true
 
 	-- Set timer for next spawn event
 	start_random_timer(self)
@@ -101,9 +95,6 @@ start_random_timer = function(self)
 end
 
 function init(self)
-	-- Active asteroids
-	self.entities = {}
-
 	local rand_seed = os.time()
 	print("Seeding random with OS time ", rand_seed)
 	math.randomseed(rand_seed)

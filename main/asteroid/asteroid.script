@@ -1,6 +1,7 @@
+local GameState = require "main.gamestate"
 local utils = require "main.utils"
 
---- Angle this asteroid moves along
+go.property("type", hash("large")) --- Type of the asteroid (small or large)
 go.property("turn_speed", 6)
 go.property("velocity", vmath.vector3())
 
@@ -36,15 +37,43 @@ function update(self, dt)
 	local rotation = go.get_rotation()
 	rotation = rotation * vmath.quat_rotation_z(self.turn_speed * dt)
 	go.set_rotation(rotation)
-
+	
 	local pos = go.get_position()
 	go.set_position(pos+ (self.velocity * dt))
 
 	wrap_if_out_of_bounds(self, pos, rotation)
 end
 
-local function resolve_collision(self, message, sender)
+local function explode(self)
+	go.delete()
+end
 
+local function break_up_asteroid(self)
+	local pos = go.get_position()
+	local rot = go.get_rotation()
+
+	local asteroid_1_vel = vmath.rotate(vmath.quat_rotation_z(math.pi / 4), self.velocity)
+	local asteroid_1 = factory.create("#break_factory", pos + vmath.vector3(20, 20, 0), rot, { velocity = asteroid_1_vel, type = hash("small") })
+	
+	local asteroid_2_vel = vmath.rotate(vmath.quat_rotation_z(math.pi / -4), self.velocity)
+	local asteroid_2 = factory.create("#break_factory", pos + vmath.vector3(20, 20, 0), rot, { velocity = asteroid_2_vel, type = hash("small") })
+
+	GameState.active_asteroids[go.get_id()] = nil
+	go.delete()
+end
+
+local function hit_by_bullet(self)
+	if self.type == hash("large") then
+		break_up_asteroid(self)
+	else -- type is small
+		explode(self)
+	end
+end
+
+local function resolve_collision(self, message, sender)
+	if message.other_group == hash("bullet") then
+		hit_by_bullet(self)
+	end
 end
 
 function on_message(self, message_id, message, sender)
